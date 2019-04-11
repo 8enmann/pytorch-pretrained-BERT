@@ -196,8 +196,9 @@ class SampledDataset(Dataset):
         # TODO: use the index
         return self.sampler.sample(self.length)
     
-ds = SampledDataset(sampler, 1024)
-data_loader = DataLoader(ds, batch_size=2)
+ds = SampledDataset(sampler, 128)
+batch_size = 4
+data_loader = DataLoader(ds, batch_size=batch_size)
 print(next(iter(data_loader)).shape)
 print(sampler.total_size)
 
@@ -205,7 +206,7 @@ print(sampler.total_size)
 # ## Prep optimizer
 # We use OpenAIAdam because that's what run_openai_gpt used
 
-num_train_epochs, train_batch_size, warmup_proportion, max_grad_norm, weight_decay, learning_rate = 3, 2, .002, 1, .01, 6e-5
+num_train_epochs, train_batch_size, warmup_proportion, max_grad_norm, weight_decay, learning_rate = 3, batch_size, .002, 1, .01, 6e-5
 from pytorch_pretrained_bert import OpenAIAdam
 
 # Prepare optimizer
@@ -229,6 +230,7 @@ optimizer = OpenAIAdam(optimizer_grouped_parameters,
 
 lm_coef = 0.9
 nb_tr_steps, tr_loss, exp_average_loss = 0, 0, None
+model.apply(model.init_weights)
 model.train()
 for _ in trange(int(num_train_epochs), desc="Epoch"):
     tr_loss = 0
