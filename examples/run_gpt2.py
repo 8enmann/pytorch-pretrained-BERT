@@ -40,11 +40,14 @@ def sample_sequence(model, length, start_token=None, batch_size=None, context=No
     past = None
     with torch.no_grad():
         for i in trange(length):
+            # logits.shape: [1,2,50257], past.shape: 12 x [2, 1, 12, len(output), 64]
             logits, past = model(prev, past=past)
+            # [1, 50257]
             logits = logits[:, -1, :] / temperature
             logits = top_k_logits(logits, k=top_k)
             log_probs = F.softmax(logits, dim=-1)
             if sample:
+                # [batch, 1]
                 prev = torch.multinomial(log_probs, num_samples=1)
             else:
                 _, prev = torch.topk(log_probs, k=1, dim=-1)
@@ -62,7 +65,6 @@ def run_model():
     parser.add_argument("--top_k", type=int, default=0)
     parser.add_argument('--unconditional', action='store_true', help='If true, unconditional generation.')
     args = parser.parse_args()
-    print(args)
 
     if args.batch_size == -1:
         args.batch_size = 1
